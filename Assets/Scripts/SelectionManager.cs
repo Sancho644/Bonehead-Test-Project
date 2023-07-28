@@ -3,7 +3,7 @@
 public class SelectionManager : MonoBehaviour
 {
     [SerializeField] private float _maxDistance = 20f;
-    [SerializeField] private LayerMask _swordManLayer;
+    [SerializeField] private LayerMask _selectionLayer;
     [SerializeField] private LayerMask _itemLayer;
 
     private Camera _camera;
@@ -12,6 +12,10 @@ public class SelectionManager : MonoBehaviour
     private Transform _selection;
     private Transform _firstSelection;
     private bool _isSelect;
+    
+    public delegate void OnReadValues(GameObject item);
+
+    public OnReadValues OnRead;
 
     private void Start()
     {
@@ -30,53 +34,58 @@ public class SelectionManager : MonoBehaviour
     {
         var ray = _camera.ScreenToWorldPoint(Input.mousePosition);
 
-        var hit = Physics2D.Raycast(ray, Vector2.up, _maxDistance, _swordManLayer);
-        
+        var hit = Physics2D.Raycast(ray, Vector2.up, _maxDistance, _selectionLayer);
+
         if (hit.collider != null)
         {
-            SelectSwordMan(hit);
+            SelectObject(hit);
         }
 
 
-            /*if (_isSelect)
-            {
-                if (Physics.Raycast(ray, out hit, _maxDistance, _playerPlanetLayer))
-                {
-                    SelectNeutral(hit, _selection);
-    
-                    return;
-                }
-            }
-    
+        /*if (_isSelect)
+        {
             if (Physics.Raycast(ray, out hit, _maxDistance, _playerPlanetLayer))
             {
-                SelectPlayerPlanet(hit);
-    
+                SelectNeutral(hit, _selection);
+
                 return;
             }
-    
-            if (Physics.Raycast(ray, out hit, _maxDistance, _neutralPlanetLayer) && _isSelect)
-            {
-                SelectNeutral(hit, _selection);
-            }
-            else if (_selectionRenderer != null)
-            {
-                _firstSelection = default;
-                _isSelect = false;
-                _selectionRenderer.material = _defaultMaterial;
-            }*/
+        }
+
+        if (Physics.Raycast(ray, out hit, _maxDistance, _playerPlanetLayer))
+        {
+            SelectPlayerPlanet(hit);
+
+            return;
+        }
+
+        if (Physics.Raycast(ray, out hit, _maxDistance, _neutralPlanetLayer) && _isSelect)
+        {
+            SelectNeutral(hit, _selection);
+        }
+        else if (_selectionRenderer != null)
+        {
+            _firstSelection = default;
+            _isSelect = false;
+            _selectionRenderer.material = _defaultMaterial;
+        }*/
     }
 
-    private void SelectSwordMan(RaycastHit2D hit)
+    private void SelectObject(RaycastHit2D hit)
     {
         _selection = hit.transform;
-        
+
         if (_selection.TryGetComponent(out SwordManController controller))
         {
             controller.StartAnimation();
         }
+
+        if (_selection.TryGetComponent(out ItemStats item))
+        {
+            OnRead?.Invoke(item.Item);
+        }
     }
-    
+
     /*
     private void SelectPlayerPlanet(RaycastHit hit)
     {
